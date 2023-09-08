@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\ASUS\Desktop\lessons\NIC\Message Queue\Parallel_executor\build\CMakeFiles\731326f7ae67aba3447c45e543d7022e\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{7395884C-D9A2-38C3-9F22-D1007886BC0C}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
