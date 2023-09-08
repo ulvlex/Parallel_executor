@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include "Device.hpp"
 #include <random>
@@ -19,7 +19,7 @@ public:
         int size = dis(gen);
         std::string data;
         for (int i = 0; i < size; ++i) {
-            int asciiValue = 97 + dis(gen) % 26; // Случайные маленькие буквы
+            int asciiValue = 97 + dis(gen) % 26; // РЎР»СѓС‡Р°Р№РЅС‹Рµ РјР°Р»РµРЅСЊРєРёРµ Р±СѓРєРІС‹
             data += static_cast<char>(asciiValue);
         }
         return data;
@@ -30,7 +30,7 @@ public:
 		return true;
 	}
 
-    size_t returnDelay() override{ //возвращаем задержку
+    size_t returnDelay() override{ //РІРѕР·РІСЂР°С‰Р°РµРј Р·Р°РґРµСЂР¶РєСѓ
         return delay;
     }
 

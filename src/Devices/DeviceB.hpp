@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include <random>
 
@@ -11,7 +11,7 @@ public:
 	}
 
 	std::string getDataAsString() override{
-		//заполняем строку тремя рандомными целыми числаими от 0 до 198 
+		//Р·Р°РїРѕР»РЅСЏРµРј СЃС‚СЂРѕРєСѓ С‚СЂРµРјСЏ СЂР°РЅРґРѕРјРЅС‹РјРё С†РµР»С‹РјРё С‡РёСЃР»Р°РёРјРё РѕС‚ 0 РґРѕ 198 
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		std::uniform_int_distribution<> dis(0, 198);
@@ -25,7 +25,7 @@ public:
 		return true;
 	}
 
-	size_t returnDelay() override{ ////возвращаем задержку
+	size_t returnDelay() override{ ////РІРѕР·РІСЂР°С‰Р°РµРј Р·Р°РґРµСЂР¶РєСѓ
 		return delay;
 	}
 
