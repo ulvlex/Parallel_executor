@@ -45,8 +45,7 @@ void differentModes(bool normalA, bool normalB) {
 
     //поток для устройства А
     std::thread threadA([&]() {
-        std::shared_ptr<StartedEvent> startedEvent = std::make_shared<StartedEvent>(deviceA);
-        eventQueue.push(startedEvent); //добавляем событие начала считывания в очередь
+        eventQueue.push(std::make_shared<StartedEvent>(deviceA)); //добавляем событие начала считывания в очередь
         while (cntA < numOfCallsA) { 
             //имитируем отсутствие ответа при чтении с утройства А через заданное количество вызовов функции read при необходимости
             if (!normalA && cntA == numForErrorA) {
@@ -54,20 +53,17 @@ void differentModes(bool normalA, bool normalB) {
             }
             
             deviceA->read(); //читаем с устройства
-            std::shared_ptr<DataEvent> dataEvent = std::make_shared<DataEvent>(deviceA);
-            eventQueue.push(dataEvent); //добавляем данные, считанные с устройства, в очередь
+            eventQueue.push(std::make_shared<DataEvent>(deviceA)); //добавляем данные, считанные с устройства, в очередь
             ++cntA;
         }
-        std::shared_ptr<WorkDoneEvent> workDoneEvent = std::make_shared<WorkDoneEvent>(deviceA);
-        eventQueue.push(workDoneEvent); //в случае, если всё успешно считалось, добавлемя событие окончания считывания в очередь
+        eventQueue.push(std::make_shared<WorkDoneEvent>(deviceA)); //в случае, если всё успешно считалось, добавлемя событие окончания считывания в очередь
         workDoneA = true; //обозначаем, что всё успешно выполнилось
         });
 
 
     //поток для устройства B
     std::thread threadB([&]() {
-        std::shared_ptr<StartedEvent> startedEvent = std::make_shared<StartedEvent>(deviceB);
-        eventQueue.push(startedEvent);
+        eventQueue.push(std::make_shared<StartedEvent>(deviceB));
         while (cntB < numOfCallsB) {
             //имитируем отсутствие ответа при чтении с утройства B через заданное количество вызовов функции read
             if (!normalB && cntB == numForErrorB) {
@@ -75,12 +71,10 @@ void differentModes(bool normalA, bool normalB) {
             }
 
             deviceB->read();
-            std::shared_ptr<DataEvent> dataEvent = std::make_shared<DataEvent>(deviceB);
-            eventQueue.push(dataEvent);
+            eventQueue.push(std::make_shared<DataEvent>(deviceB));
             ++cntB;
         }
-        std::shared_ptr<WorkDoneEvent> workDoneEvent = std::make_shared<WorkDoneEvent>(deviceB);
-        eventQueue.push(workDoneEvent);
+        eventQueue.push(std::make_shared<WorkDoneEvent>(deviceB));
         workDoneB = true;
         });
 
@@ -110,23 +104,22 @@ void differentModes(bool normalA, bool normalB) {
             threadB.detach();
             break;
         }
-        else {
-            if (!checkWaiting) {
-                if (workDoneA || workDoneB) { // одно из устройств перестало отвечать, но работа завершилась успешно
-                    std::cout << "One device stopped responding, but the job was completed successfully" << std::endl;
-                }
-                else {
-                    if (!workDoneA && !workDoneB) { //оба устройства перестали отвечать
-                        std::cout << "Both devices stopped responding" << std::endl;
-                    }
-                    else { // одно из устройств перестало отвечать и работа завершилась не успешно
-                        std::cout << "One device stopped responding and an error occurred" << std::endl;
-                    }
-                }
-                threadA.detach();
-                threadB.detach();
-                break;
+        else  if (!checkWaiting) {
+            if (workDoneA || workDoneB) { // одно из устройств перестало отвечать, но работа завершилась успешно
+                std::cout << "One device stopped responding, but the job was completed successfully" << std::endl;
             }
+            else {
+                if (!workDoneA && !workDoneB) { //оба устройства перестали отвечать
+                    std::cout << "Both devices stopped responding" << std::endl;
+                }
+                else { // одно из устройств перестало отвечать и работа завершилась не успешно
+                    std::cout << "One device stopped responding and an error occurred" << std::endl;
+                }
+            }
+
+            threadA.detach();
+            threadB.detach();
+            break;
         }
     }
 }

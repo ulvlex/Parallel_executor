@@ -2,8 +2,10 @@
 
 #include "Events/Event.hpp"
 
-#include<mutex>
+#include <mutex>
 #include <queue>
+#include <condition_variable>
+#include <memory>
 
 class EventQueue
 {
@@ -21,16 +23,18 @@ public:
 		// Ждем, пока не станет доступно сообщение или истечет время ожидания
 		if (queue.empty()) {
 			while (cv.wait_for(lock, duration) != std::cv_status::timeout) { //пока не пройдёт время ожидания 
-				if (!queue.empty()) //если очередь в какой-то момент времени не пуста, то переходим к считыванию
-					goto returnEvent;
+				if (!queue.empty()) { //если очередь в какой-то момент времени не пуста, то переходим к считыванию
+					auto event = queue.front();
+					queue.pop();
+					cv.notify_one(); //будим потоки
+					return event;
+				}
 			}
-			
+
 			//в случае, если очередь всё же пуста по истечении времени
 			cv.notify_one(); //будим потоки
 			return nullptr;
 		}
-
-		returnEvent:
 
 		auto event = queue.front();
 		queue.pop();

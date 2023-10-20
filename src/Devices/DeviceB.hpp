@@ -2,6 +2,9 @@
 #include "Device.hpp"
 
 #include <random>
+#include <string>
+#include <chrono>
+#include <thread>
 
 class DeviceB : public Device {
 public:

@@ -2,6 +2,9 @@
 
 #include "DeviceEvent.hpp"
 
+#include <string>
+#include <memory>
+
 class DataEvent : public DeviceEvent {
 public:
 	DataEvent(std::shared_ptr<Device> device) : DeviceEvent(device) {}
