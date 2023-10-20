@@ -1,6 +1,6 @@
 ﻿#pragma once
-
 #include "Device.hpp"
+
 #include <random>
 
 class DeviceA : public Device {

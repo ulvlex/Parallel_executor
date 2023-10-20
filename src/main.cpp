@@ -1,15 +1,20 @@
-﻿#include <iostream>
-#include <thread>
-#include <memory>
-
-#include <Queue/EventQueue.hpp>
+﻿#include <Queue/EventQueue.hpp>
 #include <Devices/DeviceA.hpp>
 #include <Devices/DeviceB.hpp>
 #include <Events/StartedEvent.hpp>
 #include <Events/DataEvent.hpp>
 #include <Events/WorkDoneEvent.hpp>
 
-//функция, которая позволяет протестирвоать работу в следующий случаях:
+#include <boost/program_options.hpp>
+
+#include <iostream>
+#include <thread>
+#include <memory>
+
+namespace po = boost::program_options;
+
+
+//функция, которая позволяет протестировать работу в следующий случаях:
 //оба устройства работают в штатном режиме,
 //устройство А перестает отвечать через заданное число вызовов функции readA, устройство В работает в штатном режиме
 //устройство В перестает отвечать через заданное число вызовов функции readВ, устройство А работает в штатном режиме,
@@ -90,9 +95,12 @@ void differentModes(bool normalA, bool normalB) {
         else
             maxWaiting = deviceB->returnDelay() + 1;
 
-        std::shared_ptr<const Event> event = eventQueue.pop(std::chrono::seconds(maxWaiting), checkWaiting);
+        std::shared_ptr<const Event> event = eventQueue.pop(std::chrono::seconds(maxWaiting));
         if (event != nullptr) {
             std::cout << event->toString() << std::endl;
+        }
+        else {
+            checkWaiting = false;
         }
 
         //проверка на то, что завершился приём данных и обработка информации
@@ -106,65 +114,75 @@ void differentModes(bool normalA, bool normalB) {
             if (!checkWaiting) {
                 if (workDoneA || workDoneB) { // одно из устройств перестало отвечать, но работа завершилась успешно
                     std::cout << "One device stopped responding, but the job was completed successfully" << std::endl;
-                    threadA.detach();
-                    threadB.detach(); 
-                    break;
                 }
                 else {
                     if (!workDoneA && !workDoneB) { //оба устройства перестали отвечать
                         std::cout << "Both devices stopped responding" << std::endl;
-                        threadA.detach();
-                        threadB.detach();
-                        break;
                     }
                     else { // одно из устройств перестало отвечать и работа завершилась не успешно
                         std::cout << "One device stopped responding and an error occurred" << std::endl;
-                        threadA.detach();
-                        threadB.detach();
-                        break;
                     }
                 }
+                threadA.detach();
+                threadB.detach();
+                break;
             }
         }
     }
 }
 
 
-int main() {
-     //переменные для проверки корректности работы программы при сбоях чтения с устройств
+int main(int argc, char** argv) {
+    //переменные для проверки корректности работы программы при сбоях чтения с устройств
     bool normalA; //если false, то проверяяется корректность выполнения программы при сбое чтения с устройства А
     bool normalB; //аналогично для устройства B
 
-    std::cout << "Select a mode: \nRegular mode - press '1' \nDevice A is working normally, B is not - press '2' \n";
-    std::cout << "Device B is working normally, A is not - press '3' \n";
-    std::cout << "Both devices are not working in normal mode - press '4'" << std::endl;
+    po::options_description desc("Options");
 
-    char check;
-    std::cin >> check;
+    desc.add_options()
+        ("help", "Print help messages") //Вызов help справки
+        ("regular-mode, rm", "choosing a regular mode")
+        ("stop-b, sb", "device A is working normally, B is not")
+        ("stop-a, sa", "device B is working normally, A is not")
+        ("stop-both, s", "both devices are not working in normal mode");
 
-    switch (check) {
-    case '1': 
-        normalA = true;
-        normalB = true;
-        differentModes(normalA, normalB);
-        break;
-    case '2':
-        normalA = true;
-        normalB = false;
-        differentModes(normalA, normalB);
-        break;
-    case '3':
-        normalA = false;
-        normalB = true;
-        differentModes(normalA, normalB);
-        break;
-    case '4':
-        normalA = false;
-        normalB = false;
-        differentModes(normalA, normalB);
-        break;
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);  // парсим переданные аргументы
+    po::notify(vm); // записываем аргументы в переменные в программе
+
+    // Если есть запрос на справку
+    if (vm.count("help"))
+    {
+        // То выводим описание меню
+        std::cout << desc << std::endl;
+        return 1;
     }
+
+    if (vm.count("regular-mode"))
+    {
+        normalA = true;
+        normalB = true;
+    }
+    else if (vm.count("stop-b"))
+    {
+        normalA = true;
+        normalB = false;
+    }
+    else if (vm.count("stop-a")) {
+        normalA = true;
+        normalB = false;
+    } 
+    else if (vm.count("stop-both"))
+    {
+        normalA = false;
+        normalB = false;
+    }
+    else {
+        std::cout << "The parameter is entered incorrectly, please refer to the help." << std::endl;
+        return -1;
+    }
+    differentModes(normalA, normalB);
     
-    system("pause");
+    std::cin.get();
     return 0;
 }

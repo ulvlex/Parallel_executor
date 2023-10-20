@@ -1,8 +1,9 @@
 ﻿#pragma once
 
+#include "Events/Event.hpp"
+
 #include<mutex>
 #include <queue>
-#include "Events/Event.hpp"
 
 class EventQueue
 {
@@ -15,27 +16,26 @@ public:
 	}
 
 	// Удалить сообщение из очереди и вернуть его. По истечении duration, если очередь пуста, вернуть пустой указатель
-	std::shared_ptr<const Event> pop(const std::chrono::seconds& duration, bool& checkWaiting) {
+	std::shared_ptr<const Event> pop(const std::chrono::seconds& duration) {
 		std::unique_lock<std::mutex> lock(mtx); //блокируем мьютекс, чтобы другой поток в этот момент не мог изменить очередь
 		// Ждем, пока не станет доступно сообщение или истечет время ожидания
 		if (queue.empty()) {
-			if (cv.wait_for(lock, duration) == std::cv_status::timeout) {
-				// Если время ожидания истекло, вернуть пустой указатель
-				checkWaiting = false;
-				cv.notify_one(); //будим потоки
-				return nullptr;
+			while (cv.wait_for(lock, duration) != std::cv_status::timeout) { //пока не пройдёт время ожидания 
+				if (!queue.empty()) //если очередь в какой-то момент времени не пуста, то переходим к считыванию
+					goto returnEvent;
 			}
-			else {
-				cv.notify_one(); //будим потоки
-				return nullptr;
-			}
-		}
-		else {
-			auto event = queue.front();
-			queue.pop();
+			
+			//в случае, если очередь всё же пуста по истечении времени
 			cv.notify_one(); //будим потоки
-			return event;
+			return nullptr;
 		}
+
+		returnEvent:
+
+		auto event = queue.front();
+		queue.pop();
+		cv.notify_one(); //будим потоки
+		return event;
 	}
 
 private:

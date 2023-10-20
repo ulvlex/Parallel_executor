@@ -2,9 +2,21 @@ cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
 
 project(Parallel_executor)
 
+set (BOOST_ROOT /boost_1_82_0) # Путь к библиотеке Boost
+set (Boost_LIBRARY_DIR /boost_1_82_0/stage/lib)
+set (Boost_USE_STATIC_LIBS ON)
+
+set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
+
+# Подключаем необходимые модули
+find_package(Boost REQUIRED)
+
 include_directories(${CMAKE_SOURCE_DIR}/src)
   
-add_executable(Parallel_executor
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIR}) # подключаем заголовочные файлы
+    link_directories(${Boost_LIBRARY_DIRS})
+    add_executable(Parallel_executor
 	src/main.cpp
 	src/Queue/EventQueue.hpp
 	src/Events/Event.hpp
@@ -15,3 +27,5 @@ add_executable(Parallel_executor
 	src/Devices/Device.hpp
 	src/Devices/DeviceA.hpp
 	src/Devices/DeviceB.hpp)
+    target_link_libraries(Parallel_executor LINK_PUBLIC ${Boost_LIBRARIES})
+endif()

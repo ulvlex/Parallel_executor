@@ -2,6 +2,7 @@
 
 #include "Event.hpp"
 #include "Devices/Device.hpp"
+
 #include <memory>
 
 class DeviceEvent : public Event {
