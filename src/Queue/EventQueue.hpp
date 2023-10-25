@@ -22,24 +22,20 @@ public:
 		std::unique_lock<std::mutex> lock(mtx); //блокируем мьютекс, чтобы другой поток в этот момент не мог изменить очередь
 		// Ждем, пока не станет доступно сообщение или истечет время ожидания
 		if (queue.empty()) {
-			while (cv.wait_for(lock, duration) != std::cv_status::timeout) { //пока не пройдёт время ожидания 
-				if (!queue.empty()) { //если очередь в какой-то момент времени не пуста, то переходим к считыванию
-					auto event = queue.front();
-					queue.pop();
-					cv.notify_one(); //будим потоки
-					return event;
-				}
-			}
-
+			cv.wait_for(lock, duration, [this] { return !queue.empty(); });
+		}
+	
+		if (!queue.empty()) {
+			auto event = queue.front();
+			queue.pop();
+			cv.notify_one(); //будим потоки
+			return event;
+		}
+		else {
 			//в случае, если очередь всё же пуста по истечении времени
 			cv.notify_one(); //будим потоки
 			return nullptr;
 		}
-
-		auto event = queue.front();
-		queue.pop();
-		cv.notify_one(); //будим потоки
-		return event;
 	}
 
 private:
