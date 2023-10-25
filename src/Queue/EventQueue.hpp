@@ -20,22 +20,17 @@ public:
 	// Удалить сообщение из очереди и вернуть его. По истечении duration, если очередь пуста, вернуть пустой указатель
 	std::shared_ptr<const Event> pop(const std::chrono::seconds& duration) {
 		std::unique_lock<std::mutex> lock(mtx); //блокируем мьютекс, чтобы другой поток в этот момент не мог изменить очередь
+
 		// Ждем, пока не станет доступно сообщение или истечет время ожидания
-		if (queue.empty()) {
-			cv.wait_for(lock, duration, [this] { return !queue.empty(); });
-		}
-	
-		if (!queue.empty()) {
+		if (cv.wait_for(lock, duration, [this] { return !queue.empty(); })) {
+			// Если wait_for завершился из-за оповещения, извлекаем сообщение
 			auto event = queue.front();
 			queue.pop();
-			cv.notify_one(); //будим потоки
 			return event;
 		}
-		else {
-			//в случае, если очередь всё же пуста по истечении времени
-			cv.notify_one(); //будим потоки
-			return nullptr;
-		}
+
+		// Если wait_for завершился из-за истечения времени
+		return nullptr;
 	}
 
 private:
